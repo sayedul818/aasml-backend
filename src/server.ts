@@ -15,7 +15,7 @@ const startServer = async (): Promise<void> => {
     await connectDB();
 
     // Start server
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log('');
       console.log('🚀 ========================================');
       console.log(`🎓 AASML Backend Server is running`);
@@ -25,6 +25,15 @@ const startServer = async (): Promise<void> => {
       console.log(`📚 API Docs: http://localhost:${PORT}/api/health`);
       console.log('🚀 ========================================');
       console.log('');
+    });
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('SIGTERM received, shutting down gracefully');
+      server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+      });
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
@@ -48,3 +57,6 @@ process.on('uncaughtException', (err: Error) => {
 
 // Start the server
 startServer();
+
+// Export app for Vercel serverless function
+export default app;
