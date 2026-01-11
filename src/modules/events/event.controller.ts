@@ -179,10 +179,71 @@ export const registerForEvent = async (
       throw ApiError.badRequest('Event is full');
     }
 
+    // Validate registration payload
+    const registrationSchema = z.object({
+      name: z.string().min(1),
+      email: z.string().email(),
+      phone: z.string().optional(),
+      studentId: z.string().min(1)
+    });
+
+    const payload = registrationSchema.parse(req.body);
+
+    // Normalize and check duplicates (unique email and phone per event)
+    const normalizedEmail = payload.email.trim().toLowerCase();
+    const normalizedPhone = payload.phone ? payload.phone.replace(/\D/g, '') : undefined;
+
+    event.registrations = event.registrations || [];
+
+    const alreadyRegistered = event.registrations.some((r: any) => {
+      const rEmail = r.email ? String(r.email).trim().toLowerCase() : '';
+      const rPhone = r.phone ? String(r.phone).replace(/\D/g, '') : '';
+      return (rEmail && rEmail === normalizedEmail) || (normalizedPhone && rPhone && rPhone === normalizedPhone);
+    });
+
+    if (alreadyRegistered) {
+      throw ApiError.badRequest('A registration with this email or phone already exists for this event');
+    }
+
+    // Push registration record
+    event.registrations.push({
+      name: payload.name,
+      email: normalizedEmail,
+      phone: normalizedPhone,
+      studentId: String(payload.studentId).trim(),
+      submittedAt: new Date()
+    });
+
     event.currentParticipants += 1;
     await event.save();
 
-    ApiResponse.success(res, 'Registered for event successfully', event);
+    ApiResponse.success(res, 'Registered for event successfully', {
+      eventId: event._id,
+      registration: event.registrations[event.registrations.length - 1]
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      next(ApiError.badRequest(error.errors[0].message));
+    } else {
+      next(error);
+    }
+  }
+};
+
+// Get registrations for an event (admin-protected)
+export const getEventRegistrations = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const event = await Event.findById(req.params.id).select('registrations title');
+
+    if (!event) {
+      throw ApiError.notFound('Event not found');
+    }
+
+    ApiResponse.success(res, 'Event registrations retrieved successfully', event.registrations || []);
   } catch (error) {
     next(error);
   }

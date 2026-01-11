@@ -145,6 +145,13 @@ export interface IEvent extends Document {
   registrationLink?: string;
   maxParticipants?: number;
   currentParticipants: number;
+  registrations?: {
+    name: string;
+    email: string;
+    phone?: string;
+    studentId?: string;
+    submittedAt: Date;
+  }[];
   speakers: {
     name: string;
     designation: string;

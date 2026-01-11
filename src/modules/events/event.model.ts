@@ -50,6 +50,15 @@ const eventSchema = new Schema<IEvent>(
       default: 0,
       min: [0, 'Current participants cannot be negative']
     },
+    registrations: [
+      {
+        name: { type: String, required: true },
+        email: { type: String, required: true },
+        phone: { type: String },
+        studentId: { type: String },
+        submittedAt: { type: Date, default: Date.now }
+      }
+    ],
     speakers: [{
       name: {
         type: String,
