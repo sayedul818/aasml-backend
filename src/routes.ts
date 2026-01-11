@@ -7,6 +7,7 @@ import projectRoutes from './modules/projects/project.route';
 import publicationRoutes from './modules/publications/publication.route';
 import eventRoutes from './modules/events/event.route';
 import applicationRoutes from './modules/applications/application.route';
+import mediaRoutes from './modules/media/media.route';
 
 const router = Router();
 
@@ -28,5 +29,6 @@ router.use('/projects', projectRoutes);
 router.use('/publications', publicationRoutes);
 router.use('/events', eventRoutes);
 router.use('/applications', applicationRoutes);
+router.use('/media', mediaRoutes);
 
 export default router;

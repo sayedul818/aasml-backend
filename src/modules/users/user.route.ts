@@ -3,6 +3,7 @@ import { authMiddleware } from '../../middlewares/auth.middleware';
 import roleMiddleware from '../../middlewares/role.middleware';
 import { UserRole } from '../../types';
 import {
+  createUser,
   getAllUsers,
   getUserById,
   updateUser,
@@ -18,6 +19,7 @@ router.get('/profile', authMiddleware, getProfile);
 router.put('/profile', authMiddleware, updateProfile);
 
 // Admin routes
+router.post('/', authMiddleware, roleMiddleware([UserRole.ADMIN]), createUser);
 router.get('/', authMiddleware, roleMiddleware([UserRole.ADMIN]), getAllUsers);
 router.get('/:id', authMiddleware, roleMiddleware([UserRole.ADMIN]), getUserById);
 router.put('/:id', authMiddleware, roleMiddleware([UserRole.ADMIN]), updateUser);

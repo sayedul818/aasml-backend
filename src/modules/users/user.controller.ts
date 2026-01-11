@@ -1,8 +1,49 @@
 import { Response, NextFunction } from 'express';
+import { z } from 'zod';
 import { AuthRequest } from '../../types';
 import User from '../users/user.model';
 import ApiError from '../../utils/ApiError';
 import ApiResponse from '../../utils/ApiResponse';
+
+// Validation schema
+const createUserSchema = z.object({
+  name: z.string().min(2).max(100),
+  email: z.string().email(),
+  password: z.string().min(6),
+  role: z.enum(['ADMIN', 'FACULTY', 'MEMBER', 'PUBLIC'])
+});
+
+// Create user (Admin only)
+export const createUser = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const validatedData = createUserSchema.parse(req.body);
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: validatedData.email });
+    if (existingUser) {
+      throw ApiError.badRequest('User with this email already exists');
+    }
+
+    // Create user
+    const user = await User.create(validatedData);
+
+    // Remove password from response
+    const userResponse = user.toObject();
+    delete (userResponse as any).password;
+
+    ApiResponse.created(res, 'User created successfully', userResponse);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      next(ApiError.badRequest(error.errors[0].message));
+    } else {
+      next(error);
+    }
+  }
+};
 
 // Get all users (Admin only)
 export const getAllUsers = async (

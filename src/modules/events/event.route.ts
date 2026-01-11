@@ -19,11 +19,10 @@ const router = Router();
 router.get('/', getAllEvents);
 router.get('/:id', getEventById);
 router.post('/:id/register', registerForEvent);
-// Admin: get registrations for an event
+// Get registrations for an event (authenticated users)
 router.get(
   '/:id/registrations',
   authMiddleware,
-  roleMiddleware([UserRole.ADMIN]),
   getEventRegistrations
 );
 
